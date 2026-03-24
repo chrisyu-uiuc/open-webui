@@ -848,7 +848,7 @@
                     <div class="my-4">
                         <div class="flex w-full justify-between mb-1">
                             <div class="self-center text-xs font-medium text-gray-500">
-                                {$i18n.t('TTS Voice')}
+                                {$i18n.t('Text-to-Speech Voice')}
                             </div>
                         </div>
                         <div class="flex w-full">
@@ -858,7 +858,11 @@
                                     class="w-full text-sm bg-transparent outline-hidden"
                                     type="text"
                                     bind:value={tts.voice}
-                                    placeholder={$i18n.t('e.g. alloy, echo, shimmer')}
+                                    placeholder={$config?.audio?.tts?.engine === 'azure'
+                                        ? $i18n.t('e.g. en-US-AvaMultilingualNeural')
+                                        : $config?.audio?.tts?.engine === 'elevenlabs'
+                                          ? $i18n.t('e.g. 21m00Tcm4TlvDqW21m00')
+                                          : $i18n.t('e.g. alloy, echo, shimmer')}
                                 />
                                 <datalist id="voice-list">
                                     {#each voices as voice}
