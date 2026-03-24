@@ -483,16 +483,10 @@ async def speech(request: Request, user=Depends(get_verified_user)):
             )
 
     elif request.app.state.config.TTS_ENGINE == "azure":
-        try:
-            payload = json.loads(body.decode("utf-8"))
-        except Exception as e:
-            log.exception(e)
-            raise HTTPException(status_code=400, detail="Invalid JSON payload")
-
         region = request.app.state.config.TTS_AZURE_SPEECH_REGION or "eastus"
         base_url = request.app.state.config.TTS_AZURE_SPEECH_BASE_URL
-        language = request.app.state.config.TTS_VOICE
-        locale = "-".join(request.app.state.config.TTS_VOICE.split("-")[:2])
+        language = payload.get("voice", request.app.state.config.TTS_VOICE)
+        locale = "-".join(language.split("-")[:2])
         output_format = request.app.state.config.TTS_AZURE_SPEECH_OUTPUT_FORMAT
 
         try:
