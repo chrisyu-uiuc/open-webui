@@ -492,9 +492,10 @@ async def speech(request: Request, user=Depends(get_verified_user)):
         region = request.app.state.config.TTS_AZURE_SPEECH_REGION or "eastus"
         base_url = request.app.state.config.TTS_AZURE_SPEECH_BASE_URL
         # Use voice from payload if provided, otherwise fall back to global config
-        language = payload.get("voice", request.app.state.config.TTS_VOICE)
+        language = payload.get("voice") or request.app.state.config.TTS_VOICE or "en-US-AvaMultilingualNeural"
         # Derive locale from voice ID (e.g., "en-US-JennyNeural" -> "en-US")
-        locale = "-".join(language.split("-")[:2])
+        parts = language.split("-")
+        locale = "-".join(parts[:2]) if len(parts) >= 2 else "en-US"
         output_format = request.app.state.config.TTS_AZURE_SPEECH_OUTPUT_FORMAT
 
         try:
@@ -1360,14 +1361,12 @@ def get_available_voices(request) -> dict:
             pass
     elif request.app.state.config.TTS_ENGINE == "azure":
         try:
-            region = request.app.state.config.TTS_AZURE_SPEECH_REGION
+            region = request.app.state.config.TTS_AZURE_SPEECH_REGION or "eastus"
             base_url = request.app.state.config.TTS_AZURE_SPEECH_BASE_URL
             url = (
                 base_url or f"https://{region}.tts.speech.microsoft.com"
             ) + "/cognitiveservices/voices/list"
-            headers = {
-                "Ocp-Apim-Subscription-Key": request.app.state.config.TTS_API_KEY
-            }
+            headers = {"Ocp-Apim-Subscription-Key": request.app.state.config.TTS_API_KEY}
 
             response = requests.get(
                 url, headers=headers, timeout=AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST
