@@ -2,7 +2,7 @@
     import { toast } from 'svelte-sonner';
 
     import { onMount, getContext, tick } from 'svelte';
-    import { models, tools, functions, user } from '$lib/stores';
+    import { models, tools, functions, user, config } from '$lib/stores';
     import { WEBUI_BASE_URL, DEFAULT_CAPABILITIES } from '$lib/constants';
 
     import { getTools } from '$lib/apis/tools';
@@ -106,14 +106,30 @@
     let voices = [];
 
     const getVoices = async () => {
-        const res = await _getVoices(localStorage.token).catch((e) => {
-            console.error('Failed to fetch voices:', e);
-        });
+        // If TTS engine is Web API (empty string), use browser's speechSynthesis voices
+        if ($config?.audio?.tts?.engine === '') {
+            const getVoicesLoop = setInterval(() => {
+                const browserVoices = window.speechSynthesis.getVoices();
+                if (browserVoices.length > 0) {
+                    clearInterval(getVoicesLoop);
+                    voices = browserVoices.map((v) => ({ id: v.voiceURI, name: v.name }));
+                }
+            }, 100);
+        } else {
+            const res = await _getVoices(localStorage.token).catch((e) => {
+                console.error('Failed to fetch voices:', e);
+            });
 
-        if (res) {
-            voices = res.voices;
+            if (res) {
+                voices = res.voices;
+            }
         }
     };
+
+    // Re-fetch voices when TTS engine changes
+    $: if ($config?.audio?.tts?.engine !== undefined) {
+        getVoices();
+    }
 
     const submitHandler = async () => {
         loading = true;
