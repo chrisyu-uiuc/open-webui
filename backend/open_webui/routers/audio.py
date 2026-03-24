@@ -491,8 +491,10 @@ async def speech(request: Request, user=Depends(get_verified_user)):
 
         region = request.app.state.config.TTS_AZURE_SPEECH_REGION or "eastus"
         base_url = request.app.state.config.TTS_AZURE_SPEECH_BASE_URL
-        language = request.app.state.config.TTS_VOICE
-        locale = "-".join(request.app.state.config.TTS_VOICE.split("-")[:2])
+        # Use voice from payload if provided, otherwise fall back to global config
+        language = payload.get("voice", request.app.state.config.TTS_VOICE)
+        # Derive locale from voice ID (e.g., "en-US-JennyNeural" -> "en-US")
+        locale = "-".join(language.split("-")[:2])
         output_format = request.app.state.config.TTS_AZURE_SPEECH_OUTPUT_FORMAT
 
         try:
